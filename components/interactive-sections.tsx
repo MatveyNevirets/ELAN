@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, MoveHorizontal } from "lucide-react";
 import { brand, images, services, team, testimonials } from "@/lib/content";
 import ImageCover from "@/components/image-cover";
 
@@ -41,21 +41,22 @@ export function ServicesSection({ onBook }: { onBook: () => void }) {
 }
 
 export function TransformationSection() {
+  const [compare, setCompare] = useState(50);
   return (
     <section className="transformation" aria-labelledby="transformation-heading">
       <div className="transform-head">
         <div><div className="section-meta reveal">04 / 09 &nbsp; · &nbsp; MAKE-UP RITUAL</div><h2 className="transform-title reveal" id="transformation-heading">Макияж,<br /><em>в котором ты.</em></h2></div>
         <p className="transform-note reveal">Мягкий макияж подчёркивает черты и оставляет тебя собой.</p>
       </div>
-      <div className="compare reveal" aria-label="Результат макияжа: до и после">
-        <div className="compare-panel">
-          <ImageCover src={images.before} alt="До макияжа: естественная кожа без косметики" className="compare-image" sizes="(max-width: 620px) 45vw, 40vw" />
-          <span className="compare-label">ДО · БЕЗ МАКИЯЖА</span>
+      <div className="compare reveal" style={{ "--split": `${compare}%` } as CSSProperties} aria-label="Сравнение макияжа до и после" data-cursor="DRAG">
+        <ImageCover src={images.before} alt="До макияжа: естественная кожа без косметики" className="compare-image compare-before" sizes="(max-width: 620px) 90vw, 650px" />
+        <div className="compare-after">
+          <ImageCover src={images.after} alt="После макияжа: мягкий профессиональный макияж" className="compare-image" sizes="(max-width: 620px) 90vw, 650px" />
         </div>
-        <div className="compare-panel">
-          <ImageCover src={images.after} alt="После макияжа: мягкий профессиональный макияж" className="compare-image" sizes="(max-width: 620px) 45vw, 40vw" />
-          <span className="compare-label">ПОСЛЕ · МЯГКИЙ MAKE-UP</span>
-        </div>
+        <span className="compare-label before">ДО · БЕЗ МАКИЯЖА</span>
+        <span className="compare-label after">ПОСЛЕ · MAKE-UP</span>
+        <span className="compare-handle" aria-hidden="true"><MoveHorizontal size={17} /></span>
+        <input className="compare-input" aria-label="Сдвигайте ползунок: влево — больше результата макияжа, вправо — больше фото до макияжа" type="range" min="0" max="100" value={compare} onChange={(event) => setCompare(Number(event.currentTarget.value))} />
       </div>
     </section>
   );

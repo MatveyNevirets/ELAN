@@ -410,7 +410,7 @@ a {
 }
 
 .site-cursor {
-  z-index: 120;
+  z-index: 160;
   mix-blend-mode: difference;
   pointer-events: none;
   width: 10px;
@@ -447,7 +447,7 @@ a {
 }
 
 .cursor-ring {
-  z-index: 119;
+  z-index: 159;
   pointer-events: none;
   mix-blend-mode: difference;
   border: 1px solid #e4ddd3a6;
@@ -1280,20 +1280,14 @@ a {
 }
 
 .compare {
-  background: #eee5d9;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  max-width: 1120px;
-  height: min(65vw, 650px);
-  min-height: 360px;
-  margin: auto;
-  display: grid;
-  overflow: hidden;
-}
-
-.compare-panel {
+  --split: 50%;
+  aspect-ratio: 3 / 4;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
   background: #c3b9ab;
-  min-width: 0;
+  width: min(80vw, 650px);
+  margin: auto;
   position: relative;
   overflow: hidden;
 }
@@ -1303,6 +1297,51 @@ a {
   object-position: center 36%;
   width: 100%;
   height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+.compare-before {
+  z-index: 1;
+}
+
+.compare-after {
+  z-index: 2;
+  clip-path: inset(0 0 0 var(--split));
+  position: absolute;
+  inset: 0;
+}
+
+.compare:after {
+  content: "";
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: var(--split);
+  pointer-events: none;
+  background: #eee5d9;
+  width: 1px;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.compare-handle {
+  z-index: 4;
+  left: var(--split);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  color: #fff;
+  pointer-events: none;
+  background: #2a252152;
+  border: 1px solid #f5f0e8e6;
+  border-radius: 50%;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .compare-label {
@@ -1311,9 +1350,28 @@ a {
   letter-spacing: .12em;
   color: #fff;
   text-shadow: 0 1px 6px #222;
+  pointer-events: none;
   position: absolute;
   bottom: 20px;
+}
+
+.compare-label.before {
   left: 20px;
+}
+
+.compare-label.after {
+  right: 20px;
+}
+
+.compare-input {
+  z-index: 5;
+  opacity: 0;
+  cursor: ew-resize;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  position: absolute;
+  inset: 0;
 }
 
 .team {
@@ -2467,7 +2525,7 @@ a {
 
   .transform-title {
     margin-top: 27px;
-    font-size: 72px;
+    font-size: clamp(56px, 17vw, 72px);
   }
 
   .transform-note {
@@ -2476,9 +2534,7 @@ a {
   }
 
   .compare {
-    height: 116vw;
-    min-height: 380px;
-    max-height: 570px;
+    width: min(88vw, 650px);
   }
 
   .team {
@@ -2492,7 +2548,7 @@ a {
 
   .team-title {
     margin-top: 27px;
-    font-size: 76px;
+    font-size: clamp(52px, 16vw, 76px);
   }
 
   .team-grid {
@@ -2574,7 +2630,7 @@ a {
 
   .film-title {
     margin: 38px 0;
-    font-size: clamp(90px, 22vw, 145px);
+    font-size: clamp(64px, 20vw, 145px);
   }
 
   .film-kicker {
@@ -2603,7 +2659,7 @@ a {
 
   .final-title {
     margin: 43px 0;
-    font-size: clamp(76px, 18vw, 122px);
+    font-size: clamp(60px, 16vw, 122px);
   }
 
   .final-title span:last-child {
@@ -2644,7 +2700,7 @@ a {
 
   .footer-big {
     padding-top: 21px;
-    font-size: clamp(55px, 15vw, 100px);
+    font-size: clamp(40px, 12.5vw, 80px);
   }
 
   .footer-bottom {
@@ -2681,7 +2737,7 @@ a {
   }
 
   .booking-content {
-    padding: 34px 23px 25px;
+    padding: 34px 23px max(25px, env(safe-area-inset-bottom));
   }
 
   .booking-close {
