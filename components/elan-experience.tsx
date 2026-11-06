@@ -1,290 +1,170 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "lenis";
+import type { MouseEvent } from "react";
+import { ArrowDown, ArrowUpRight, X } from "lucide-react";
+import { MotionConfig } from "motion/react";
+import { usePageMotion } from "@/lib/use-page-motion";
 import { brand, images } from "@/lib/content";
 import ImageCover from "@/components/image-cover";
 import BookingModal from "@/components/booking-modal";
 import LookbookSection from "@/components/lookbook-section";
-import { ServicesSection, TeamSection, TestimonialsSection, TransformationSection } from "@/components/interactive-sections";
-
-gsap.registerPlugin(ScrollTrigger);
+import { AboutSection, ContactsSection, FaqSection, ServicesSection, TeamSection, TestimonialsSection } from "@/components/interactive-sections";
 
 const navLinks = [
-  { label: "РИТУАЛЫ", href: "#services" },
-  { label: "АТЕЛЬЕ", href: "#atelier" },
-  { label: "КОМАНДА", href: "#team" },
-  { label: "КОНТАКТ", href: "#contact" },
+  { label: "Услуги и цены", href: "#services" },
+  { label: "Мастера", href: "#team" },
+  { label: "О салоне", href: "#atelier" },
+  { label: "Контакты", href: "#contact" },
 ];
 
 export default function ElanExperience() {
-  const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const cursorRingRef = useRef<HTMLDivElement>(null);
-  const cursorLabelRef = useRef<HTMLSpanElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
-  const lenisRef = useRef<Lenis | null>(null);
+  const [bookingService, setBookingService] = useState<string>();
+  const [heroButtonPassed, setHeroButtonPassed] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pageRef = useRef<HTMLElement>(null);
+  const heroBookingRef = useRef<HTMLButtonElement>(null);
+  const bookingTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const showStickyBooking = heroButtonPassed && !menuOpen && !bookingOpen;
+  usePageMotion(pageRef);
 
-  const openBooking = useCallback(() => {
+  const openBooking = useCallback((event?: MouseEvent<HTMLButtonElement>) => {
+    bookingTriggerRef.current = event?.currentTarget ?? (document.activeElement instanceof HTMLButtonElement ? document.activeElement : null);
+    setBookingService(undefined);
     setMenuOpen(false);
     setBookingOpen(true);
   }, []);
 
-  const closeBooking = useCallback(() => setBookingOpen(false), []);
-
-  useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setInterval(() => {
-      setProgress((value) => {
-        const next = Math.min(100, value + (reduced ? 25 : 7));
-        if (next >= 100) {
-          window.clearInterval(timer);
-          window.setTimeout(() => setLoading(false), reduced ? 20 : 360);
-        }
-        return next;
-      });
-    }, reduced ? 20 : 65);
-    return () => window.clearInterval(timer);
+  const openServiceBooking = useCallback((service: string, trigger?: HTMLButtonElement) => {
+    bookingTriggerRef.current = trigger ?? null;
+    setBookingService(service);
+    setBookingOpen(true);
   }, []);
 
-  useEffect(() => {
-    const cursor = cursorRef.current;
-    const ring = cursorRingRef.current;
-    const cursorLabel = cursorLabelRef.current;
-    if (!cursor || !ring || !cursorLabel || window.matchMedia("(pointer: coarse)").matches) return;
-    const x = gsap.quickTo(cursor, "x", { duration: 0.22, ease: "power3.out" });
-    const y = gsap.quickTo(cursor, "y", { duration: 0.22, ease: "power3.out" });
-    const ringX = gsap.quickTo(ring, "x", { duration: 0.42, ease: "power3.out" });
-    const ringY = gsap.quickTo(ring, "y", { duration: 0.42, ease: "power3.out" });
-    const move = (event: PointerEvent) => {
-      x(event.clientX);
-      y(event.clientY);
-      ringX(event.clientX);
-      ringY(event.clientY);
-    };
-    const over = (event: PointerEvent) => {
-      const target = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-cursor]") : null;
-      if (target) {
-        cursorLabel.textContent = target.dataset.cursor ?? "EXPLORE";
-        cursor.classList.add("is-active");
+  const closeBooking = useCallback(() => {
+    setBookingOpen(false);
+    window.requestAnimationFrame(() => {
+      const trigger = bookingTriggerRef.current;
+      if (trigger && getComputedStyle(trigger).visibility === "visible" && trigger.getClientRects().length) {
+        trigger.focus({ preventScroll: true });
       } else {
-        cursor.classList.remove("is-active");
+        menuToggleRef.current?.focus({ preventScroll: true });
       }
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerover", over);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerover", over);
-    };
-  }, []);
-
-  useEffect(() => {
-    const isReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (isReduced) {
-      gsap.set(".hero-image", { scale: 1 });
-      gsap.set(".hero-title span", { yPercent: 0 });
-      return;
-    }
-
-    let lenis: Lenis | undefined;
-    let ticker: ((time: number) => void) | undefined;
-    if (!window.matchMedia("(pointer: coarse)").matches) {
-      lenis = new Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: 0.9 });
-      lenisRef.current = lenis;
-      lenis.on("scroll", ScrollTrigger.update);
-      ticker = (time: number) => lenis?.raf(time * 1000);
-      gsap.ticker.add(ticker);
-      gsap.ticker.lagSmoothing(0);
-    }
-
-    const context = gsap.context(() => {
-      gsap.to(".scroll-progress i", {
-        scaleX: 1,
-        ease: "none",
-        scrollTrigger: { trigger: document.documentElement, start: "top top", end: "max", scrub: 0.3 },
-      });
-      ScrollTrigger.create({
-        start: 60,
-        onUpdate: (self) => headerRef.current?.classList.toggle("is-compact", self.scroll() > 60),
-      });
-      gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
-        gsap.fromTo(element, { y: 38, autoAlpha: 0 }, {
-          y: 0, autoAlpha: 1, duration: 1.05, ease: "power3.out",
-          scrollTrigger: { trigger: element, start: "top 86%", once: true },
-        });
-      });
-      gsap.utils.toArray<HTMLElement>(".word-reveal").forEach((element) => {
-        gsap.fromTo(element, { yPercent: 80, rotate: 3, autoAlpha: 0.4 }, {
-          yPercent: 0, rotate: 0, autoAlpha: 1, stagger: 0.12, ease: "none",
-          scrollTrigger: { trigger: element.parentElement, start: "top 78%", end: "bottom 52%", scrub: 0.8 },
-        });
-      });
-      gsap.to(".philosophy-photo", { yPercent: -11, ease: "none", scrollTrigger: { trigger: ".philosophy", start: "top bottom", end: "bottom top", scrub: 1 } });
-      gsap.to(".film-backdrop", { scale: 1.18, yPercent: 3, ease: "none", scrollTrigger: { trigger: ".film", start: "top bottom", end: "bottom top", scrub: 1 } });
-      gsap.fromTo(".film-title span", { yPercent: 22, autoAlpha: 0.4 }, { yPercent: 0, autoAlpha: 1, stagger: 0.12, ease: "none", scrollTrigger: { trigger: ".film", start: "top 70%", end: "center center", scrub: 1 } });
-      const rail = document.querySelector<HTMLElement>(".gallery-rail");
-      if (rail && window.matchMedia("(min-width: 901px)").matches) {
-        const distance = () => Math.max(0, rail.scrollWidth - window.innerWidth * 0.91);
-        gsap.to(rail, {
-          x: () => -distance(), ease: "none",
-          scrollTrigger: { trigger: ".gallery-pin", start: "top top", end: () => `+=${distance()}`, pin: true, scrub: 1, invalidateOnRefresh: true },
-        });
-      }
+      bookingTriggerRef.current = null;
     });
-
-    return () => {
-      context.revert();
-      if (lenis) {
-        if (ticker) gsap.ticker.remove(ticker);
-        lenis.destroy();
-        lenisRef.current = null;
-      }
-    };
   }, []);
 
   useEffect(() => {
-    if (loading) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set([".hero-image", ".hero-title span", ".hero-kicker", ".hero-note", ".hero-scroll", ".hero-index", ".hero-number"], { clearProps: "all" });
-      return;
-    }
-    const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
-    intro.fromTo(".hero-image", { clipPath: "inset(0 0 100% 0)", scale: 1.16 }, { clipPath: "inset(0 0 0% 0)", scale: 1.04, duration: 1.6 });
-    intro.fromTo(".hero-title span", { yPercent: 115, rotate: 2 }, { yPercent: 0, rotate: 0, duration: 1.2, stagger: 0.13 }, "-=.88");
-    intro.fromTo(".hero-kicker, .hero-note, .hero-scroll, .hero-index, .hero-number", { y: 14, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7, stagger: 0.08 }, "-=.63");
-    gsap.to(".hero-image", { scale: 1, duration: 5.5, ease: "power1.out", delay: 1.15 });
-    return () => { intro.kill(); };
-  }, [loading]);
+    const button = heroBookingRef.current;
+    if (!button) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setHeroButtonPassed(!entry.isIntersecting && entry.boundingClientRect.bottom <= 0);
+    });
+    observer.observe(button);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
-    const locked = bookingOpen || menuOpen;
-    document.body.style.overflow = locked ? "hidden" : "";
-    if (locked) lenisRef.current?.stop();
-    else lenisRef.current?.start();
-    return () => { document.body.style.overflow = ""; };
+    const updateHeader = () => setScrolled(window.scrollY > 30);
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    return () => window.removeEventListener("scroll", updateHeader);
+  }, []);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    if (bookingOpen || menuOpen) document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
   }, [bookingOpen, menuOpen]);
 
   useEffect(() => {
     if (!bookingOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeBooking();
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    const onEscape = (event: KeyboardEvent) => { if (event.key === "Escape") closeBooking(); };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
   }, [bookingOpen, closeBooking]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuToggleRef.current?.focus({ preventScroll: true });
+      }
+      if (event.key !== "Tab") return;
+      const elements = Array.from(menuRef.current?.querySelectorAll<HTMLElement>("a[href],button") ?? []);
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
   return (
-    <main>
-      <div className="noise" aria-hidden="true" />
-      <div className={`preloader${loading ? "" : " is-done"}`} aria-hidden={!loading}>
-        <div className="preloader-inner">
-          <div className="preloader-top"><span>BEAUTY ATELIER</span><span>EST. MMXXI</span></div>
-          <div className="preloader-brand">{brand.name}</div>
-          <div className="preloader-track"><i style={{ width: `${progress}%` }} /></div>
-          <div className="preloader-foot"><span>ПОДГОТАВЛИВАЕМ ПРОСТРАНСТВО</span><span>{String(progress).padStart(3, "0")}</span></div>
-        </div>
-      </div>
-
-      <div className="site-cursor" ref={cursorRef} aria-hidden="true"><span ref={cursorLabelRef}>EXPLORE</span></div>
-      <div className="cursor-ring" ref={cursorRingRef} aria-hidden="true" />
-      <div className="scroll-progress" aria-hidden="true"><i /></div>
-
-      <header className="site-header" ref={headerRef}>
-        <a className="brand-mark" href="#top" aria-label={`${brand.name} — наверх`}>{brand.name}<span className="brand-sub">BEAUTY ATELIER</span></a>
-        <nav className="header-center" aria-label="Основная навигация">
-          {navLinks.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
-        </nav>
-        <div className="header-actions">
-          <span className="header-location">{brand.city}</span>
-          <button className="book-link" onClick={openBooking} data-cursor="BOOK"><span>ЗАПИСАТЬСЯ</span><ArrowUpRight size={13} /></button>
-          <button className="menu-toggle" onClick={() => setMenuOpen((open) => !open)} aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"} aria-expanded={menuOpen}>
-            {menuOpen ? "ЗАКРЫТЬ" : "МЕНЮ"}
-          </button>
-        </div>
-      </header>
-
-      <nav className={`mobile-menu${menuOpen ? " is-open" : ""}`} aria-hidden={!menuOpen}>
-        {navLinks.map((item, index) => <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}><span>0{index + 1}</span>{item.label}</a>)}
-        <button className="mobile-book" onClick={openBooking}>ЗАПИСАТЬСЯ НА ВИЗИТ <ArrowUpRight size={13} /></button>
-      </nav>
-
-      <section className="hero" id="top">
-        <ImageCover src={images.hero} alt={`Портрет модели для кампании ${brand.name}`} className="hero-image" priority sizes="100vw" objectPosition="57% 40%" />
-        <div className="hero-vignette" />
-        <div className="hero-number">55°45′ N &nbsp; 37°36′ E</div>
-        <div className="hero-copy">
-          <div className="hero-kicker">A DIFFERENT KIND OF BEAUTY</div>
-          <h1 className="hero-title"><span>БЫТЬ</span><span><em>собой.</em></span></h1>
-        </div>
-        <div className="hero-bottom">
-          <p className="hero-note">Пространство, где красота<br />не требует объяснений.</p>
-          <a className="hero-scroll" href="#philosophy"><i /> ЛИСТАЙТЕ ВНИЗ <ArrowDown size={12} /></a>
-          <span className="hero-index">01 — 09</span>
-        </div>
-      </section>
-
-      <section className="philosophy" id="philosophy">
-        <div className="section-meta reveal">01 / 09 &nbsp; · &nbsp; НАША ФИЛОСОФИЯ</div>
-        <div className="philosophy-photo" data-cursor="FEEL"><ImageCover src={images.philosophy} alt="Естественная красота в мягком дневном свете" className="philosophy-photo-image" sizes="40vw" /></div>
-        <div className="philosophy-caption">A STUDY IN SOFTNESS · № 001</div>
-        <div className="philosophy-copy">
-          <h2 className="philosophy-title"><span><span className="word-reveal">Красота</span> <span className="word-reveal">—</span></span><span className="offset"><span className="word-reveal">это</span> <span className="word-reveal">ты.</span></span></h2>
-          <div className="philosophy-foot">
-            <span className="philosophy-symbol">LESS, BUT CLOSER.</span>
-            <p>Мы не меняем. Мы бережно проявляем то, что уже есть. В своём ритме, без правил и чужих ожиданий.</p>
+    <MotionConfig reducedMotion="user">
+    <main ref={pageRef} className="elan-page commercial-page">
+      <div className="site-content" inert={bookingOpen}>
+        <header className={`site-header${scrolled ? " is-compact" : ""}`}>
+          <a className="brand-mark" href="#top" aria-label={`${brand.name} — на главную`}>{brand.name}<span className="brand-sub">BEAUTY ATELIER</span></a>
+          <nav className="header-center" aria-label="Основная навигация">{navLinks.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}</nav>
+          <div className="header-actions">
+            <button className={`header-booking${showStickyBooking ? " is-visible" : ""}`} onClick={openBooking} aria-haspopup="dialog" aria-hidden={!showStickyBooking} inert={!showStickyBooking}>Записаться <ArrowUpRight size={16} aria-hidden="true" /></button>
+            {brand.phone && <a className="header-phone" href={`tel:${brand.phone.replaceAll(" ", "")}`}>{brand.phone}</a>}
+            <button ref={menuToggleRef} className="menu-toggle" onClick={() => setMenuOpen((open) => !open)} aria-label="Открыть меню" aria-controls="site-menu" aria-expanded={menuOpen}>Меню</button>
           </div>
-        </div>
-      </section>
+        </header>
 
-      <div className="marquee" aria-label="Наши направления">
-        <div className="marquee-track" aria-hidden="true">
-          {Array.from({ length: 2 }, (_, index) => <span key={index}>HAIR <b>✳</b> SKIN <b>✳</b> NAILS <b>✳</b> MAKE-UP <b>✳</b> RITUAL <b>✳</b> CARE <b>✳</b></span>)}
+        <div ref={menuRef} id="site-menu" className={`mobile-menu${menuOpen ? " is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Навигация по сайту" aria-hidden={!menuOpen} inert={!menuOpen}>
+          <button className="mobile-menu-close" onClick={() => { setMenuOpen(false); menuToggleRef.current?.focus(); }} aria-label="Закрыть меню"><X size={23} /></button>
+          <nav aria-label="Разделы сайта">{navLinks.map((item) => <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}</nav>
+          <button className="mobile-book" onClick={openBooking} aria-haspopup="dialog">Записаться <ArrowUpRight size={18} aria-hidden="true" /></button>
+          {brand.phone && <a className="mobile-menu-phone" href={`tel:${brand.phone.replaceAll(" ", "")}`}>{brand.phone}</a>}
         </div>
+
+        <div className="page-body" inert={menuOpen}>
+          <section className="hero" id="top" aria-labelledby="hero-heading">
+            <div className="hero-visual"><ImageCover src={images.hero} alt={`Редакционный портрет для ${brand.name}`} className="hero-image" priority sizes="(max-width: 620px) 100vw, 76vw" /></div>
+            <div className="hero-vignette" aria-hidden="true" />
+            <div className="hero-copy">
+              <p className="hero-kicker">АТЕЛЬЕ КРАСОТЫ · МОСКВА</p>
+              <h1 className="hero-title" id="hero-heading"><span><i className="hero-title-word">БЫТЬ</i></span><span><em className="hero-title-word">собой.</em></span></h1>
+              <p className="hero-description">Окрашивание, уход за лицом, маникюр и макияж на Большой Никитской.</p>
+              <div className="hero-offer">
+                <button ref={heroBookingRef} className="hero-booking-button" onClick={openBooking} aria-haspopup="dialog" aria-describedby="hero-booking-note">Записаться <ArrowUpRight size={23} aria-hidden="true" /></button>
+                <p className="hero-booking-note" id="hero-booking-note">Сначала выберите услугу. Без оплаты на сайте</p>
+              </div>
+              <a className="hero-scroll" href="#services">Посмотреть услуги и цены <ArrowDown size={14} aria-hidden="true" /></a>
+            </div>
+          </section>
+
+          <ServicesSection onBook={openServiceBooking} />
+          <TeamSection onBook={openServiceBooking} />
+          <LookbookSection />
+          <AboutSection />
+          <TestimonialsSection />
+          <FaqSection />
+          <ContactsSection onBook={openBooking} />
+
+          <footer className="site-footer">
+            <a className="footer-wordmark" href="#top" aria-label={`${brand.name} — наверх`}>{brand.name}</a>
+            <div className="footer-documents"><a href="/privacy">Политика конфиденциальности</a><a href="/personal-data">Обработка персональных данных</a></div>
+            <div className="site-footer-bottom"><span>© {brand.name} · 2026</span><span>Москва · Большая Никитская</span><a href="#top">Наверх ↑</a></div>
+          </footer>
+        </div>
+
+        <aside className={`booking-dock${showStickyBooking ? " is-visible" : ""}`} aria-label="Запись в ателье" aria-hidden={!showStickyBooking} inert={!showStickyBooking}>
+          <button className="sticky-booking-button" onClick={openBooking} aria-haspopup="dialog">Записаться <ArrowUpRight size={21} aria-hidden="true" /></button>
+        </aside>
       </div>
-
-      <ServicesSection onBook={openBooking} />
-
-      <LookbookSection />
-
-      <TransformationSection />
-
-      <TeamSection />
-
-      <TestimonialsSection />
-
-      <section className="film" aria-label="Ритуал. Мастерство. Ты.">
-        <div className="film-backdrop"><ImageCover src={images.film} alt={`Осенний образ из кампании ${brand.name}`} className="film-backdrop-image" sizes="100vw" /></div>
-        <div className="film-content"><div className="film-kicker">A RITUAL OF YOUR OWN</div><h2 className="film-title"><span>РИТУАЛ.</span><span>ЧУВСТВО.</span><span>ТЫ.</span></h2><div className="film-kicker">СОЗДАНО ВМЕСТЕ С ВАМИ · МОСКВА</div></div>
-        <div className="film-bottom"><span>07 / 09 · THE {brand.name} RITUAL</span><span>TAKE A MOMENT FOR YOURSELF</span></div>
-      </section>
-
-      <section className="final-cta" id="booking">
-        <div className="final-image-frame"><ImageCover src={images.booking} alt={`Портрет для приглашения в ателье ${brand.name}`} className="final-image" sizes="(max-width: 620px) 64vw, 35vw" /></div>
-        <div className="final-copy"><div className="section-meta reveal">08 / 09 &nbsp; · &nbsp; ВАШ СЛЕДУЮЩИЙ РИТУАЛ</div><h2 className="final-title"><span>Время</span><span>для себя.</span></h2><motion.button className="magnetic-button final-action" onClick={openBooking} whileHover={{ x: 5 }} whileTap={{ scale: .97 }} data-cursor="LET’S GO"><span>ЗАПИСАТЬСЯ НА ВИЗИТ</span><ArrowUpRight size={16} /></motion.button></div>
-        <div className="final-small">ПОНЕДЕЛЬНИК — ВОСКРЕСЕНЬЕ<br />10:00 — 22:00<br />БОЛЬШАЯ НИКИТСКАЯ, 22</div>
-      </section>
-
-      <footer className="footer" id="contact">
-        <div className="section-meta" style={{ color: "#b9afa4", marginBottom: 42 }}>09 / 09 &nbsp; · &nbsp; КОНТАКТ</div>
-        <div className="footer-top">
-          <div><div className="footer-brand">{brand.name}</div><div className="footer-tag">BEAUTY ATELIER · MOSCOW</div></div>
-          <div className="footer-col"><h3>НАЙТИ НАС</h3><p>{brand.address}<br />Большая Никитская, 22</p><a href="https://maps.google.com/?q=Большая+Никитская+22+Москва" target="_blank" rel="noreferrer">ОТКРЫТЬ КАРТУ <ArrowUpRight size={11} /></a></div>
-          <div className="footer-col"><h3>БУДЕМ НА СВЯЗИ</h3><a href={`tel:${brand.phone.replaceAll(" ", "")}`}>{brand.phone}</a><a href="https://t.me/elanbeauty" target="_blank" rel="noreferrer">TELEGRAM ↗</a><a href="https://instagram.com/" target="_blank" rel="noreferrer">INSTAGRAM ↗</a></div>
-          <div className="footer-col"><h3>ВРЕМЯ ДЛЯ СЕБЯ</h3><p>Каждый день<br />10:00 — 22:00</p><button className="text-arrow" style={{ marginLeft: 0, marginTop: 8 }} onClick={openBooking}>BOOK A VISIT <ArrowUpRight size={12} /></button></div>
-        </div>
-        <div className="footer-big"><span>Увидимся</span><em>скоро.</em></div>
-        <div className="footer-bottom"><span>© {brand.name} BEAUTY ATELIER · 2026</span><span>СОЗДАНО С ВНИМАНИЕМ</span><a href="#top">НАВЕРХ ↑</a></div>
-      </footer>
-
-      <BookingModal open={bookingOpen} onClose={closeBooking} />
+      <BookingModal key={bookingService ?? "all-services"} open={bookingOpen} onClose={closeBooking} initialService={bookingService} />
     </main>
+    </MotionConfig>
   );
 }

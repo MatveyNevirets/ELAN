@@ -5,7 +5,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 28667,
+      "htmlSize": 42171,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -33,7 +33,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 8675,
+      "htmlSize": 8745,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -62,7 +62,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 7865,
+      "htmlSize": 8115,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -85,13 +85,69 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
+    },
+    "/personal-data": {
+      "routeType": "page",
+      "response": "complete",
+      "compute": "static",
+      "htmlSize": 10042,
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/personal-data",
+      "dataRoute": "/personal-data.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/privacy": {
+      "routeType": "page",
+      "response": "complete",
+      "compute": "static",
+      "htmlSize": 9972,
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/privacy",
+      "dataRoute": "/privacy.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "9c12c67532accf825761de67a1231df2",
-    "previewModeSigningKey": "ec47bd37a232c6cfbb020e8a1b10a6d477a2f09f0356c837ed199e3fcecd483e",
-    "previewModeEncryptionKey": "7b08456c75e484b6fa843770c33304aa2715ecc24f118cdaaf12245dc05255d3"
+    "previewModeId": "39a4491b12d773dddfad820106b60052",
+    "previewModeSigningKey": "aee2c3b41c6cd6750cc7893a13bcbdb3ae06b94fb70166e967f87e47ab9dc5ef",
+    "previewModeEncryptionKey": "1364850dd85a1e20d0e27ff83a52ade7801389a5ae1e36301dd0b2107e44587f"
   }
 }

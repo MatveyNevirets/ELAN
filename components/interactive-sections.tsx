@@ -1,128 +1,117 @@
 "use client";
 
-import { useRef, useState } from "react";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, MoveHorizontal } from "lucide-react";
-import { brand, images, services, team, testimonials } from "@/lib/content";
+import { ArrowDown, ArrowUpRight, Clock3, Plus } from "lucide-react";
+import { brand, images, team, testimonials } from "@/lib/content";
+import { bookingServices, serviceCategories } from "@/lib/booking";
 import ImageCover from "@/components/image-cover";
 
-export function ServicesSection({ onBook }: { onBook: () => void }) {
-  const [activeService, setActiveService] = useState(0);
+export type ServiceBookingHandler = (service: string, trigger?: HTMLButtonElement) => void;
+
+export function ServicesSection({ onBook }: { onBook: ServiceBookingHandler }) {
   return (
-    <section className="services" id="services">
-      <div className="services-head">
-        <div><div className="section-meta reveal">02 / 09 &nbsp; · &nbsp; ПЕРСОНАЛЬНЫЕ РИТУАЛЫ</div><h2 className="services-title reveal">Выбрать<br /><em>своё.</em></h2></div>
-        <p className="services-intro reveal">Каждая встреча начинается с разговора. Остальное — мы создадим вместе.</p>
+    <section className="price-section content-section" id="services" aria-labelledby="services-heading">
+      <div className="section-heading">
+        <div><p className="eyebrow">ВЫБЕРИТЕ СВОЁ НАПРАВЛЕНИЕ</p><h2 id="services-heading">Услуги <em>и цены.</em></h2></div>
+        <p className="section-intro">Всё для вашего образа — от нового оттенка волос до завершающего акцента в макияже.</p>
       </div>
-      <div className="services-layout">
-        <div>
-          <div className="service-list" role="tablist" aria-label={`Услуги ${brand.name}`}>
-            {services.map((service, index) => (
-              <button key={service.number} className={`service-row${activeService === index ? " is-active" : ""}`} onMouseEnter={() => setActiveService(index)} onFocus={() => setActiveService(index)} onClick={() => setActiveService(index)} role="tab" aria-selected={activeService === index} data-cursor="SELECT">
-                <span className="service-row-num">{service.number}</span><span className="service-row-name">{service.name}</span>
-                <span className="service-row-meta"><span>{service.price}</span><span>{service.duration}</span></span>
-              </button>
-            ))}
-          </div>
-          <p className="service-detail" key={`detail-${activeService}`}>{services[activeService].detail}</p>
-          <button className="text-arrow" onClick={onBook}>ОБСУДИТЬ РИТУАЛ <ArrowUpRight size={13} /></button>
-        </div>
-        <AnimatePresence mode="wait">
-          <motion.div className="service-image-wrap" key={activeService} initial={{ clipPath: "inset(8% 0 0 0)", opacity: .4 }} animate={{ clipPath: "inset(0% 0 0 0)", opacity: 1 }} exit={{ clipPath: "inset(0 0 9% 0)", opacity: .35 }} transition={{ duration: .55, ease: [.22, .68, 0, 1] }} data-cursor="DISCOVER">
-            <span className="service-image-no">{services[activeService].number}</span>
-            <ImageCover src={services[activeService].image} alt={`${services[activeService].name} ритуал ${brand.name}`} className="service-image" sizes="50vw" />
-            <div className="service-image-label"><span>{brand.name} BEAUTY ATELIER</span><span>{services[activeService].name.toUpperCase()} RITUAL</span></div>
-          </motion.div>
-        </AnimatePresence>
+      <nav className="price-categories" aria-label="Направления услуг">
+        {serviceCategories.map((category) => <a key={category.id} href={`#price-${category.id}`}>{category.title}<ArrowDown size={13} aria-hidden="true" /></a>)}
+      </nav>
+      <div className="price-list">
+        {serviceCategories.map((category) => (
+          <section className="price-group" key={category.id} id={`price-${category.id}`} aria-labelledby={`category-${category.id}`}>
+            <h3 id={`category-${category.id}`}>{category.title}</h3>
+            <div>
+              <ul className="price-rows">
+                {bookingServices.filter((service) => service.category === category.id).map((service) => (
+                  <li className="price-row" key={service.number}>
+                    <div className="price-service"><h4>{service.title}</h4><p>{service.description}</p><span className="service-duration"><Clock3 size={13} aria-hidden="true" />{service.duration}</span></div>
+                    <strong className="price-value">{service.price}</strong>
+                    <button className="inline-booking" onClick={(event) => onBook(service.number, event.currentTarget)} aria-label={`Записаться: ${service.title}`} aria-haspopup="dialog">Записаться <ArrowUpRight size={16} aria-hidden="true" /></button>
+                  </li>
+                ))}
+              </ul>
+              <p className="price-condition">{category.note}</p>
+            </div>
+          </section>
+        ))}
       </div>
     </section>
   );
 }
 
-export function TransformationSection() {
-  const [compare, setCompare] = useState(50);
+export function TeamSection({ onBook }: { onBook: ServiceBookingHandler }) {
   return (
-    <section className="transformation" aria-labelledby="transformation-heading">
-      <div className="transform-head">
-        <div><div className="section-meta reveal">04 / 09 &nbsp; · &nbsp; MAKE-UP RITUAL</div><h2 className="transform-title reveal" id="transformation-heading">Макияж,<br /><em>в котором ты.</em></h2></div>
-        <p className="transform-note reveal">Мягкий макияж подчёркивает черты и оставляет тебя собой.</p>
+    <section className="masters-section content-section" id="team" aria-labelledby="team-heading">
+      <div className="section-heading">
+        <div><p className="eyebrow">ЗНАКОМСТВО ПЕРЕД ВИЗИТОМ</p><h2 id="team-heading">Ваши <em>мастера.</em></h2></div>
+        <p className="section-intro">Выберите специалиста своего направления. Или доверьте выбор администратору при записи.</p>
       </div>
-      <div className="compare reveal" style={{ "--split": `${compare}%` } as CSSProperties} aria-label="Сравнение макияжа до и после" data-cursor="DRAG">
-        <ImageCover src={images.before} alt="До макияжа: естественная кожа без косметики" className="compare-image compare-before" sizes="(max-width: 620px) 90vw, 650px" />
-        <div className="compare-after">
-          <ImageCover src={images.after} alt="После макияжа: мягкий профессиональный макияж" className="compare-image" sizes="(max-width: 620px) 90vw, 650px" />
-        </div>
-        <span className="compare-label before">ДО · БЕЗ МАКИЯЖА</span>
-        <span className="compare-label after">ПОСЛЕ · MAKE-UP</span>
-        <span className="compare-handle" aria-hidden="true"><MoveHorizontal size={17} /></span>
-        <input className="compare-input" aria-label="Сдвигайте ползунок: влево — больше результата макияжа, вправо — больше фото до макияжа" type="range" min="0" max="100" value={compare} onChange={(event) => setCompare(Number(event.currentTarget.value))} />
+      <div className="masters-grid">
+        {team.map((person) => {
+          const service = bookingServices.find((item) => item.specialists.some((specialist) => specialist.name === person.name));
+          return (
+            <article className="master-profile" key={person.name}>
+              <div className="master-photo"><ImageCover src={person.image} alt={`${person.name} — ${person.role}`} className="master-image" sizes="(max-width: 620px) 88vw, 28vw" /></div>
+              <div className="master-details"><p className="master-role">{person.role}</p><h3>{person.name}</h3><p>{person.specialty}</p>
+                {service && <button className="inline-booking" onClick={(event) => onBook(service.number, event.currentTarget)} aria-label={`Выбрать мастера: ${person.name}`} aria-haspopup="dialog">Выбрать мастера <ArrowUpRight size={16} aria-hidden="true" /></button>}
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-export function TeamSection() {
-  const [activePerson, setActivePerson] = useState(0);
+export function AboutSection() {
   return (
-    <section className="team" id="team">
-      <div className="team-head">
-        <div><div className="section-meta reveal">05 / 09 &nbsp; · &nbsp; ТЕ, КОМУ МОЖНО ДОВЕРИТЬСЯ</div><h2 className="team-title reveal">Руки,<br /><em>которые знают.</em></h2></div>
-      </div>
-      <div className="team-grid">
-        <AnimatePresence mode="wait">
-          <motion.div className="team-portrait" key={activePerson} initial={{ opacity: .3, clipPath: "inset(5% 0 0)" }} animate={{ opacity: 1, clipPath: "inset(0% 0 0)" }} exit={{ opacity: .3 }} transition={{ duration: .55, ease: [.22, .68, 0, 1] }} data-cursor="MEET">
-            <ImageCover src={team[activePerson].image} alt={`Портрет специалиста ${brand.name} — ${team[activePerson].name}`} className="team-portrait-img" sizes="(max-width: 620px) 90vw, 56vw" />
-            <div className="team-portrait-caption"><span>{brand.name} PEOPLE</span><span>PORTRAIT / 0{activePerson + 1}</span></div>
-          </motion.div>
-        </AnimatePresence>
-        <div className="team-info">
-          <div>
-            {team.map((person, index) => <button className={`team-person${activePerson === index ? " is-active" : ""}`} key={person.name} onMouseEnter={() => setActivePerson(index)} onFocus={() => setActivePerson(index)} onClick={() => setActivePerson(index)} data-cursor="MEET">
-              <span className="team-person-num">0{index + 1}</span><span><span className="team-person-name">{person.name}</span><span className="team-person-role">{person.role}</span><span className="team-person-specialty">{person.specialty}</span></span>
-            </button>)}
-          </div>
-          <p className="team-statement">«Хорошая работа начинается с вопроса: как вы хотите себя чувствовать?»</p>
-        </div>
+    <section className="about-section content-section" id="atelier" aria-labelledby="atelier-heading">
+      <div className="about-photo"><ImageCover src="/images/atelier-interior.webp" alt="Интерьер ателье: светлые стены, большие зеркала и тёплое дерево" className="about-image" sizes="(max-width: 800px) 88vw, 45vw" /></div>
+      <div className="about-copy"><p className="eyebrow">О САЛОНЕ</p><h2 id="atelier-heading">В своём<br /><em>ритме.</em></h2><p className="about-intro">ÉLAN — ателье красоты на Большой Никитской. Место для продуманного ухода и образа, в котором вам комфортно.</p>
+        <dl className="atelier-facts"><div><dt>Четыре направления</dt><dd>Волосы, уход за лицом, ногти и макияж.</dd></div><div><dt>Стоимость до начала процедуры</dt><dd>Обсудим пожелания и согласуем программу ухода.</dd></div><div><dt>Время — по подтверждению</dt><dd>Администратор уточнит детали после вашей заявки.</dd></div></dl>
+        <a className="inline-booking" href="#contact">Адрес и часы работы <ArrowDown size={16} aria-hidden="true" /></a>
       </div>
     </section>
   );
 }
 
 export function TestimonialsSection() {
-  const [activeQuote, setActiveQuote] = useState(0);
-  const startX = useRef<number | null>(null);
-  const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
-    const initialX = startX.current;
-    startX.current = null;
-    if (initialX !== null && Math.abs(event.clientX - initialX) > 48) {
-      setActiveQuote((index) => (index + (event.clientX < initialX ? 1 : testimonials.length - 1)) % testimonials.length);
-    }
-  };
   return (
-    <section className="testimonials" aria-label="Отзывы гостей" onPointerDown={(event) => { startX.current = event.clientX; }} onPointerUp={onPointerUp}>
-      <div className="section-meta reveal" style={{ color: "#b9afa4" }}>06 / 09 &nbsp; · &nbsp; СЛОВА ГОСТЕЙ</div>
-      <div className="testimonial-layout">
-        <AnimatePresence mode="wait">
-          <motion.div key={activeQuote} initial={{ opacity: 0, y: 18, filter: "blur(5px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -14, filter: "blur(3px)" }} transition={{ duration: .45 }}>
-            <blockquote className="testimonial-quote">{testimonials[activeQuote].quote}</blockquote>
-            <div className="testimonial-author">{testimonials[activeQuote].author}</div>
-            <div className="testimonial-service">{testimonials[activeQuote].service}</div>
-          </motion.div>
-        </AnimatePresence>
-        <div className="testimonial-side">
-          <AnimatePresence mode="wait">
-            <motion.div className="testimonial-photo" key={testimonials[activeQuote].image} initial={{ opacity: .35, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: .2, y: -6 }} transition={{ duration: .35 }}>
-              <ImageCover src={testimonials[activeQuote].image} alt={`Портрет гостьи: ${testimonials[activeQuote].author}`} className="testimonial-photo-image" sizes="(max-width: 620px) 64px, 150px" />
-            </motion.div>
-          </AnimatePresence>
-          <div className="testimonial-index">0{activeQuote + 1} <span style={{ color: "#8e867e" }}>/ 0{testimonials.length}</span></div>
-          <div className="testimonial-nav">
-            <button aria-label="Предыдущий отзыв" onClick={() => setActiveQuote((activeQuote + testimonials.length - 1) % testimonials.length)}><ArrowLeft size={15} /></button>
-            <button aria-label="Следующий отзыв" onClick={() => setActiveQuote((activeQuote + 1) % testimonials.length)}><ArrowRight size={15} /></button>
-          </div>
-          <span className="testimonial-help">ЛИСТАЙТЕ ИЛИ НАЖМИТЕ, ЧТОБЫ УЗНАТЬ ДАЛЬШЕ</span>
-        </div>
+    <section className="reviews-section content-section" aria-labelledby="reviews-heading">
+      <div className="section-heading"><div><p className="eyebrow">ОПЫТ ПОСЛЕ ВИЗИТА</p><h2 id="reviews-heading">Слова <em>гостей.</em></h2></div></div>
+      <div className="reviews-grid">{testimonials.map((review) => <figure className="review" key={review.author}><blockquote>«{review.quote}»</blockquote><figcaption><span>{review.author.split(" · ")[0]}</span></figcaption></figure>)}</div>
+    </section>
+  );
+}
+
+const questions = [
+  { question: "Как записаться на визит?", answer: "Выберите услугу, мастера, дату и желаемое время. Затем оставьте имя и телефон. Администратор свяжется с вами, уточнит детали и подтвердит запись." },
+  { question: "Нужна ли оплата на сайте?", answer: "Нет, при онлайн-записи оплата и данные банковской карты не нужны. Заявка помогает согласовать услугу и время визита." },
+  { question: "Почему некоторые цены указаны «от»?", answer: "Итоговая стоимость зависит от выбранной программы, длины волос или сложности образа. Условия указаны рядом с услугами. Стоимость согласуем до начала процедуры." },
+  { question: "Можно ли не выбирать конкретного мастера?", answer: "Да. На шаге выбора мастера есть вариант «Доверьте выбор нам». Администратор подберёт специалиста выбранного направления." },
+  { question: "Как перенести визит?", answer: "Сообщите администратору об изменении планов и назовите удобный день. Новое время визита нужно согласовать и подтвердить отдельно." },
+  { question: "Нужно ли готовиться к процедуре?", answer: "Подготовка зависит от выбранной услуги. При подтверждении визита администратор уточнит пожелания и расскажет, нужна ли специальная подготовка." },
+];
+
+export function FaqSection() {
+  return (
+    <section className="faq-section content-section" id="questions" aria-labelledby="faq-heading">
+      <div><p className="eyebrow">ПЕРЕД ВИЗИТОМ</p><h2 id="faq-heading">Полезно<br /><em>знать.</em></h2></div>
+      <div className="faq-list">{questions.map((item) => <details key={item.question}><summary>{item.question}<Plus size={18} aria-hidden="true" /></summary><p>{item.answer}</p></details>)}</div>
+    </section>
+  );
+}
+
+export function ContactsSection({ onBook }: { onBook: () => void }) {
+  return (
+    <section className="contacts-section content-section" id="contact" aria-labelledby="contact-heading">
+      <div className="contact-heading"><p className="eyebrow">БУДЕМ РАДЫ ЗНАКОМСТВУ</p><h2 id="contact-heading">До встречи<br /><em>в ÉLAN.</em></h2><button className="contact-booking" onClick={onBook} aria-haspopup="dialog">Записаться <ArrowUpRight size={21} aria-hidden="true" /></button><p className="contact-booking-note">Время визита подтвердит администратор.</p></div>
+      <div className="contact-information">
+        <div className="contact-detail"><h3>АДРЕС</h3><p>{brand.address}</p><a className="inline-booking" href={brand.mapsUrl} target="_blank" rel="noreferrer">Открыть в картах <ArrowUpRight size={16} aria-hidden="true" /></a></div>
+        <div className="contact-detail"><h3>ЧАСЫ РАБОТЫ</h3><p>{brand.hours}</p></div>
+        {brand.phone && <div className="contact-detail"><h3>ТЕЛЕФОН</h3><a className="contact-phone" href={`tel:${brand.phone.replaceAll(" ", "")}`}>{brand.phone}</a></div>}
+        <div className="contact-detail"><h3>TELEGRAM</h3>{brand.messengerUrl ? <a href={brand.messengerUrl} target="_blank" rel="noreferrer">{brand.messengerHandle} ↗</a> : <p>{brand.messengerHandle}</p>}</div>
       </div>
     </section>
   );
